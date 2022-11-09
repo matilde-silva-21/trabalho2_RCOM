@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main(int argc, char *argv[]) {
 
@@ -14,8 +15,13 @@ int main(int argc, char *argv[]) {
     char user[100] = "", passwd[100] = "", host[100] = "", readingPath = 0, path[300] = "";
     
 
-    sscanf(argv[1], "ftp://%[^:]:%[^@]@%[^/]/%s", user, passwd, host, path);
-    
+    sscanf(argv[1], "ftp://%[^/]/%s", host, path);
+    //fazer em dois passos e depois verificar
+    sscanf(host, "%[^:]:%[^@]@", user, passwd);
+    if(strlen(passwd)==0){
+        memset(user,0,strlen(user));
+        user[0]='\0';
+    }
     printf("\nuser:%s\npasswd:%s\nhost:%s\npath:%s\n", user, passwd, host, path);
     
     return 0;
