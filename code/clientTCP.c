@@ -8,16 +8,11 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <string.h>
 
-#define SERVER_PORT 6000
-#define SERVER_ADDR "192.168.28.96"
 
-int main(int argc, char **argv) {
+int createConnection(char* SERVER_ADDR, int SERVER_PORT) {
 
-    if (argc > 1)
-        printf("**** No arguments needed. They will be ignored. Carrying ON.\n");
     int sockfd;
     struct sockaddr_in server_addr;
     char buf[] = "Mensagem de teste na travessia da pilha TCP/IP\n";
