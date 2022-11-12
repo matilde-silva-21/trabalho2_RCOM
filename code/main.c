@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "clientTCP.c"
 #include "download.c"
 #include "getip.c"
+/* ftp://ftp.up.pt/pub/kodi/timestamp.txt */
 
 int main(int argc, char *argv[]){
     if (argc != 2) {
@@ -24,7 +24,7 @@ int main(int argc, char *argv[]){
         exit(-1);
     }
     printf("\n");
-    if(createConnection(IPaddress, 6000)!=0){
+    if(createConnection(IPaddress, 21)!=0){
         printf("Error occurred in fuction createConnection (main.c -- line 28)\n");
         exit(-1);
     }

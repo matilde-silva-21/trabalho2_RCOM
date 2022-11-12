@@ -13,6 +13,12 @@
 
 int createConnection(char* SERVER_ADDR, int SERVER_PORT) {
 
+    //1º abrir a ligaçao com o IP e a PORT
+    //2º fazer login (anonymous ou com os dados fornecidos)
+    //3º entrar no passive mode
+    //4º receber info e calcular a PORT de leitura
+    //5º ler de PATH o ficheiro pretendido
+
     int sockfd;
     struct sockaddr_in server_addr;
     char buf[] = "Mensagem de teste na travessia da pilha TCP/IP\n";
@@ -27,14 +33,14 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT) {
     /*open a TCP socket*/
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("socket()");
-        exit(-1);
+        return -1;
     }
     /*connect to the server*/
     if (connect(sockfd,
                 (struct sockaddr *) &server_addr,
                 sizeof(server_addr)) < 0) {
         perror("connect()");
-        exit(-1);
+        return -1;
     }
     /*send a string to the server*/
     bytes = write(sockfd, buf, strlen(buf));
@@ -42,12 +48,12 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT) {
         printf("Bytes escritos %ld\n", bytes);
     else {
         perror("write()");
-        exit(-1);
+        return -1;
     }
 
     if (close(sockfd)<0) {
         perror("close()");
-        exit(-1);
+        return -1;
     }
     return 0;
 }

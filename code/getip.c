@@ -27,7 +27,7 @@ int getIP(char *host, char* IPaddress) {
 */
     if ((h = gethostbyname(host)) == NULL) {
         herror("gethostbyname()");
-        exit(-1);
+        return -1;
     }
 
     IPaddress = inet_ntoa(*((struct in_addr *) h->h_addr));
