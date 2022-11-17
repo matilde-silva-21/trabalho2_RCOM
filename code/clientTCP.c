@@ -19,9 +19,9 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT) {
     //4º receber info e calcular a PORT de leitura
     //5º ler de PATH o ficheiro pretendido
 
-    int sockfd;
+    int sockfd, phase = 0;
     struct sockaddr_in server_addr;
-    char buf[] = "Mensagem de teste na travessia da pilha TCP/IP\n";
+    char buf[100] = "user anonymous\n";
     size_t bytes;
 
     /*server address handling*/
@@ -42,14 +42,58 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT) {
         perror("connect()");
         return -1;
     }
-    /*send a string to the server*/
-    bytes = write(sockfd, buf, strlen(buf));
-    if (bytes > 0)
-        printf("Bytes escritos %ld\n", bytes);
-    else {
-        perror("write()");
-        return -1;
+
+    bytes = read(sockfd, buf, 100);
+
+    //TODO criar state machine
+    
+    /* while((bytes = write(sockfd, buf, strlen(buf))) != -1){
+        if (bytes > 0)
+            printf("Bytes escritos %ld\n", bytes);
+        else {
+            perror("write()");
+            return -1;
+        }
+
+        bytes = read(sockfd, buf, 100);
+
+        if(strncmp(buf, "220", 3) == 0){
+            printf("\n%s\n", buf);
+            memset(buf,0,100);
+        }
+
+        if(strncmp(buf, "331", 3) == 0){
+            printf("\n%s\n", buf);
+            memset(buf,0,100);
+            strcat("pass 1234\0",buf);
+        }
+
+        else if(strncmp(buf, "230", 3) == 0){
+            printf("\n%s\n", buf);
+            memset(buf,0,100);
+            strcat("pasv\0",buf);
+        }
+
+        else if(strncmp(buf, "227", 3) == 0){
+            printf("\n%s\n", buf);
+        }
+
+        else if(strncmp(buf, "150", 3) == 0){
+            
+        }
+
+        else if(strncmp(buf, "226", 3) == 0){
+            
+        }
+
+        else{
+            printf("\nStatus code not expected: %c%c%c\n", buf[0], buf[1], buf[2]);
+        }
+
+        sleep(7);
+        
     }
+     */
 
     if (close(sockfd)<0) {
         perror("close()");
