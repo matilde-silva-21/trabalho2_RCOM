@@ -3,7 +3,9 @@
 #include "clientTCP.c"
 #include "download.c"
 #include "getip.c"
-/* ftp://ftp.up.pt/pub/kodi/timestamp.txt */
+/* 
+ftp://ftp.up.pt/pub/kodi/timestamp.txt 
+*/
 
 int main(int argc, char *argv[]){
     if (argc != 2) {

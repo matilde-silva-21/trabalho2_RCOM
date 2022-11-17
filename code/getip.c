@@ -30,7 +30,7 @@ int getIP(char *host, char* IPaddress) {
         return -1;
     }
 
-    IPaddress = inet_ntoa(*((struct in_addr *) h->h_addr));
+    strcpy(IPaddress, inet_ntoa(*((struct in_addr *) h->h_addr)));
 
     printf("Host name  : %s\n", h->h_name);
     printf("IP Address : %s\n", IPaddress);
