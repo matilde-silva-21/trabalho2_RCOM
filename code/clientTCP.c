@@ -9,9 +9,39 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <math.h>
 
 
-int createConnection(char* SERVER_ADDR, int SERVER_PORT) {
+//Esta função lê o socket e retorna o status code da ultima linha da mensagem (funciona mesmo se so tiver uma linha)
+int getLastLineStatusCode(char *buf){
+    int a;
+    char *pt;
+    pt = strtok (buf,"\n");
+
+    while (pt != NULL) {
+        a = 0;
+        a = atoi(pt);
+        pt = strtok (NULL, "\n");
+    }
+    return a;
+}
+
+int getPortNumber(char* buf){
+    int numb[5] = {0};
+    int i = 0;
+    char *pt;
+    pt = strtok (buf,",");
+    while (pt != NULL) {
+        int a = atoi(pt);
+        numb[i] = a;
+        pt = strtok (NULL, ",");
+        i++;
+    }
+
+    return (numb[3]*256 + numb[4]);
+}
+
+int createConnection(char* SERVER_ADDR, int SERVER_PORT, int pasv[]) {
 
     //1º abrir a ligaçao com o IP e a PORT
     //2º fazer login (anonymous ou com os dados fornecidos)
@@ -19,9 +49,10 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT) {
     //4º receber info e calcular a PORT de leitura
     //5º ler de PATH o ficheiro pretendido
 
-    int sockfd, phase = 0;
+    int sockfd, STOP = 0;
     struct sockaddr_in server_addr;
-    char buf[100] = "user anonymous\n";
+    char buf[500] = {0};
+
     size_t bytes;
 
     /*server address handling*/
@@ -43,57 +74,42 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT) {
         return -1;
     }
 
-    bytes = read(sockfd, buf, 100);
+
 
     //TODO criar state machine
-    
-    /* while((bytes = write(sockfd, buf, strlen(buf))) != -1){
-        if (bytes > 0)
-            printf("Bytes escritos %ld\n", bytes);
-        else {
-            perror("write()");
-            return -1;
+    while (!STOP)
+    {  
+        memset(buf, 0, 500);
+        bytes = read(sockfd, buf, 500); 
+
+        if(bytes < 1) {printf("i got nothing"); continue;}
+        printf("\n%s\n", buf);
+        int sc = getLastLineStatusCode(buf);
+
+        switch(sc){
+            case 220: 
+                printf("\nSending user...\n");
+                write(sockfd, "user anonymous\n", 16);
+                break;
+            case 331:
+                printf("\nSending password...\n");
+                write(sockfd, "pass qualquer-password\n", 24);
+                break;
+            case 230:
+                printf("\nEntering passive mode...\n");
+                write(sockfd, "passv\n", 6);
+                break;
+            case 227:
+                printf("\nCalculating port number...\n");
+                int port = getPortNumber(buf);
+                break;
+            default:
+                printf("\nStatus code %d not recognized\n", sc);
+                return -1;
+                break;
         }
-
-        bytes = read(sockfd, buf, 100);
-
-        if(strncmp(buf, "220", 3) == 0){
-            printf("\n%s\n", buf);
-            memset(buf,0,100);
-        }
-
-        if(strncmp(buf, "331", 3) == 0){
-            printf("\n%s\n", buf);
-            memset(buf,0,100);
-            strcat("pass 1234\0",buf);
-        }
-
-        else if(strncmp(buf, "230", 3) == 0){
-            printf("\n%s\n", buf);
-            memset(buf,0,100);
-            strcat("pasv\0",buf);
-        }
-
-        else if(strncmp(buf, "227", 3) == 0){
-            printf("\n%s\n", buf);
-        }
-
-        else if(strncmp(buf, "150", 3) == 0){
-            
-        }
-
-        else if(strncmp(buf, "226", 3) == 0){
-            
-        }
-
-        else{
-            printf("\nStatus code not expected: %c%c%c\n", buf[0], buf[1], buf[2]);
-        }
-
-        sleep(7);
-        
     }
-     */
+    
 
     if (close(sockfd)<0) {
         perror("close()");
@@ -101,5 +117,6 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT) {
     }
     return 0;
 }
+
 
 
