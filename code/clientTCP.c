@@ -41,7 +41,7 @@ int getPortNumber(char* buf){
     return (numb[3]*256 + numb[4]);
 }
 
-int createConnection(char* SERVER_ADDR, int SERVER_PORT, int pasv[]) {
+int createConnection(char* SERVER_ADDR, int SERVER_PORT, int* port) {
 
     //1º abrir a ligaçao com o IP e a PORT
     //2º fazer login (anonymous ou com os dados fornecidos)
@@ -49,7 +49,7 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, int pasv[]) {
     //4º receber info e calcular a PORT de leitura
     //5º ler de PATH o ficheiro pretendido
 
-    int sockfd, STOP = 0;
+    int sockfd, STOP = 0, visited = 0;
     struct sockaddr_in server_addr;
     char buf[500] = {0};
 
@@ -88,23 +88,25 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, int pasv[]) {
 
         switch(sc){
             case 220: 
-                printf("\nSending user...\n");
+                if(visited) break;
+                visited = 1;
+                printf("\n////////// Sending user... //////////\n");
                 write(sockfd, "user anonymous\n", 16);
                 break;
             case 331:
-                printf("\nSending password...\n");
+                printf("\n////////// Sending password... //////////\n");
                 write(sockfd, "pass qualquer-password\n", 24);
                 break;
             case 230:
-                printf("\nEntering passive mode...\n");
+                printf("\n////////// Entering passive mode... //////////\n");
                 write(sockfd, "passv\n", 6);
                 break;
             case 227:
-                printf("\nCalculating port number...\n");
-                int port = getPortNumber(buf);
+                printf("\n////////// Calculating port number...//////////\n");
+                *port = getPortNumber(buf);
                 break;
             default:
-                printf("\nStatus code %d not recognized\n", sc);
+                printf("\n////////// Status code %d not recognized //////////\n", sc);
                 return -1;
                 break;
         }
