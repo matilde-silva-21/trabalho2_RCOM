@@ -4,12 +4,12 @@
 #include "download.c"
 #include "getip.c"
 /* 
-ftp://ftp.up.pt/pub/kodi/timestamp.txt
+ftp://ftp.up.pt/pub/kodi/timestamp.txt porta 21
     pode ser user anon + pass qualquer
 */
 
 /*
-ftp://netlab1.fe.up.pt
+ftp://netlab1.fe.up.pt porta ?
     user rcom
     pass rcom
 */

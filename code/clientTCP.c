@@ -87,6 +87,8 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
     //4º receber info e calcular a PORT de leitura
     //5º ler de PATH o ficheiro pretendido
 
+    FILE* fileptr;
+
     int STOP = 0, visited = 0, sizeUser = strlen(user), sizePass = strlen(passwd), port = 0, download = 0, sizePath = strlen(path);
 
     /* criaçao da string "user anonymous\r\n" "pass qualquer-password\r\n" a funcionar como desejado*/
@@ -125,11 +127,14 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
         if(download){
             memset(buf2, 0, 500);
             bytes = read(sockfd2, buf2, 500);
-            if(bytes < 1) {printf("i got nothing -- buf2"); continue;}
+            if(bytes < 1) {printf("\ni got nothing -- buf2\n"); continue;}
             printf("\nbuf2: %s\n", buf2);
+            for(int i=0; i<strlen(buf2); i++){
+                fputc(buf2[i], fileptr);
+            }
         }
 
-        if(bytes < 1) {printf("i got nothing -- buf"); continue;}
+        if(bytes < 1) {printf("\ni got nothing -- buf\n"); continue;}
         printf("\n%s\n", buf);
         int sc = getLastLineStatusCode(buf);
 
@@ -163,7 +168,6 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
 
             case 150: 
                 printf("\n////////// Starting File Download... //////////\n");
-                FILE* fileptr;
                 fileptr = fopen(filename, "w");
                 printf("\n--- Created file with name '%s' ---\n", filename);
                 download = 1;
