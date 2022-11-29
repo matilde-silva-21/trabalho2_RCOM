@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
         exit(-1);
     }
     printf("\n");
-    if(createConnection(IPaddress, 21, user, password)!=0){
+    if(createConnection(IPaddress, 21, user, password, path)!=0){
         printf("Error occurred in fuction createConnection (main.c -- line 36)\n");
         exit(-1);
     }

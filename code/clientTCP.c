@@ -17,13 +17,24 @@ int getLastLineStatusCode(char *buf){
     int a;
     char *pt;
     pt = strtok (buf,"\n");
-
     while (pt != NULL) {
         a = 0;
         a = atoi(pt);
         pt = strtok (NULL, "\n");
     }
     return a;
+}
+
+int getFilename(char *buf, char* filename){
+    char *pt;
+    pt = strtok (buf,"/");
+
+    while (pt != NULL) {
+        strcpy(filename, pt);
+        pt = strtok (NULL, "/");
+    }
+
+    return 0;
 }
 
 int getPortNumber(char* buf){
@@ -68,7 +79,7 @@ int createSocket(char* SERVER_ADDR, int SERVER_PORT){
     return sockfd;
 }
 
-int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passwd) {
+int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passwd, char* path) {
 
     //1º abrir a ligaçao com o IP e a PORT
     //2º fazer login (anonymous ou com os dados fornecidos)
@@ -76,22 +87,27 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
     //4º receber info e calcular a PORT de leitura
     //5º ler de PATH o ficheiro pretendido
 
-    int STOP = 0, visited = 0, sizeUser = strlen(user), sizePass = strlen(passwd), port = 0, download = 0;
+    int STOP = 0, visited = 0, sizeUser = strlen(user), sizePass = strlen(passwd), port = 0, download = 0, sizePath = strlen(path);
 
     /* criaçao da string "user anonymous\r\n" "pass qualquer-password\r\n" a funcionar como desejado*/
-    char userLogin[sizeUser+7], passwdLogin[sizePass+7];
+    char userLogin[sizeUser+7], passwdLogin[sizePass+7], retrvPath[sizePath+7], filename[strlen(path)];
     userLogin[0] = '\0';
     passwdLogin[0] = '\0';
+    retrvPath[0] = '\0';
 
     strcat(userLogin, "user ");
     strcat(passwdLogin, "pass ");
+    strcat(retrvPath, "retrv ");
 
     strcat(userLogin, user);
     strcat(passwdLogin, passwd);
+    strcat(retrvPath, path);
 
     strcat(userLogin, "\r\n");
     strcat(passwdLogin, "\r\n");
+    strcat(retrvPath, "\r\n");
 
+    getFilename(path, filename);
 
     char buf[500] = {0}, buf2[500]={0};
 
@@ -142,10 +158,14 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
                 printf("\n////////// Retrieving file... //////////\n");
                 write(sockfd, "retr pub/kodi/timestamp.txt\r\n", 29);
 
+
                 break;
 
             case 150: 
                 printf("\n////////// Starting File Download... //////////\n");
+                FILE* fileptr;
+                fileptr = fopen(filename, "w");
+                printf("\n--- Created file with name '%s' ---\n", filename);
                 download = 1;
                 break;
 
