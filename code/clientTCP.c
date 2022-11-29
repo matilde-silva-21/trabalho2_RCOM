@@ -41,36 +41,12 @@ int getPortNumber(char* buf){
     return (numb[3]*256 + numb[4]);
 }
 
-int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passwd) {
+int createSocket(char* SERVER_ADDR, int SERVER_PORT){
+    int sockfd;
+    struct sockaddr_in server_addr;
+    printf("\n////////// Creating new connection... //////////\n");
 
-    //1º abrir a ligaçao com o IP e a PORT
-    //2º fazer login (anonymous ou com os dados fornecidos)
-    //3º entrar no passive mode
-    //4º receber info e calcular a PORT de leitura
-    //5º ler de PATH o ficheiro pretendido
-
-    int sockfd, STOP = 0, visited = 0, sizeUser = strlen(user), sizePass = strlen(passwd), sockfd2, port = 0;
-
-    /* criaçao da string "user anonymous\r\n" "pass qualquer-password\r\n" a funcionar como desejado*/
-    char userLogin[sizeUser+7], passwdLogin[sizePass+7];
-    userLogin[0] = '\0';
-    passwdLogin[0] = '\0';
-
-    strcat(userLogin, "user ");
-    strcat(passwdLogin, "pass ");
-
-    strcat(userLogin, user);
-    strcat(passwdLogin, passwd);
-
-    strcat(userLogin, "\r\n");
-    strcat(passwdLogin, "\r\n");
-
-    struct sockaddr_in server_addr, server_addr2;
-    char buf[500] = {0};
-
-    size_t bytes;
-
-    /*server address handling*/
+    /* criar a outra socket */
     bzero((char *) &server_addr, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = inet_addr(SERVER_ADDR);    /*32 bit Internet address network byte ordered*/
@@ -89,7 +65,40 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
         return -1;
     }
 
+    return sockfd;
+}
 
+int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passwd) {
+
+    //1º abrir a ligaçao com o IP e a PORT
+    //2º fazer login (anonymous ou com os dados fornecidos)
+    //3º entrar no passive mode
+    //4º receber info e calcular a PORT de leitura
+    //5º ler de PATH o ficheiro pretendido
+
+    int STOP = 0, visited = 0, sizeUser = strlen(user), sizePass = strlen(passwd), port = 0, download = 0;
+
+    /* criaçao da string "user anonymous\r\n" "pass qualquer-password\r\n" a funcionar como desejado*/
+    char userLogin[sizeUser+7], passwdLogin[sizePass+7];
+    userLogin[0] = '\0';
+    passwdLogin[0] = '\0';
+
+    strcat(userLogin, "user ");
+    strcat(passwdLogin, "pass ");
+
+    strcat(userLogin, user);
+    strcat(passwdLogin, passwd);
+
+    strcat(userLogin, "\r\n");
+    strcat(passwdLogin, "\r\n");
+
+
+    char buf[500] = {0}, buf2[500]={0};
+
+    size_t bytes;
+
+    int sockfd = createSocket(SERVER_ADDR, SERVER_PORT), sockfd2 = 0;
+    if(sockfd == -1) return -1;
 
     //TODO criar state machine
     while (!STOP)
@@ -97,7 +106,14 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
         memset(buf, 0, 500);
         bytes = read(sockfd, buf, 500); 
 
-        if(bytes < 1) {printf("i got nothing"); continue;}
+        if(download){
+            memset(buf2, 0, 500);
+            bytes = read(sockfd2, buf2, 500);
+            if(bytes < 1) {printf("i got nothing -- buf2"); continue;}
+            printf("\nbuf2: %s\n", buf2);
+        }
+
+        if(bytes < 1) {printf("i got nothing -- buf"); continue;}
         printf("\n%s\n", buf);
         int sc = getLastLineStatusCode(buf);
 
@@ -120,8 +136,25 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
                 printf("\n////////// Calculating port number... //////////\n");
                 port = getPortNumber(buf);
                 printf("\nPort Calculated: %d\n", port);
+
+                if ((sockfd2 = createSocket(SERVER_ADDR, port)) == -1) return -1;
+
+                printf("\n////////// Retrieving file... //////////\n");
+                write(sockfd, "retr pub/kodi/timestamp.txt\r\n", 29);
+
+                break;
+
+            case 150: 
+                printf("\n////////// Starting File Download... //////////\n");
+                download = 1;
+                break;
+
+            case 226: 
+                printf("\n////////// Ending File Download... //////////\n");
+                download = 0;
                 STOP = 1;
                 break;
+
             default:
                 printf("\n////////// Status code %d not recognized //////////\n", sc);
                 return -1;
@@ -129,34 +162,6 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
         }
     }
 
-    printf("\n////////// Creating new connection... //////////\n");
-
-    /* criar a outra socket */
-    bzero((char *) &server_addr2, sizeof(server_addr2));
-    server_addr2.sin_family = AF_INET;
-    server_addr2.sin_addr.s_addr = inet_addr(SERVER_ADDR);    /*32 bit Internet address network byte ordered*/
-    server_addr2.sin_port = htons(port);        /*server TCP port must be network byte ordered */
-
-    /*open a TCP socket*/
-    if ((sockfd2 = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("socket()");
-        return -1;
-    }
-    /*connect to the server*/
-    if (connect(sockfd2,
-                (struct sockaddr *) &server_addr2,
-                sizeof(server_addr2)) < 0) {
-        perror("connect()");
-        return -1;
-    }
-    
-    
-    memset(buf, 0, 500);
-    bytes = read(sockfd, buf, 500); 
-    
-    
-    
-    
     
     
     if (close(sockfd2)<0) {
