@@ -31,17 +31,17 @@ int getPortNumber(char* buf){
     int i = 0;
     char *pt;
     pt = strtok (buf,",");
+    pt = strtok (NULL,",");
     while (pt != NULL) {
         int a = atoi(pt);
         numb[i] = a;
         pt = strtok (NULL, ",");
         i++;
     }
-
     return (numb[3]*256 + numb[4]);
 }
 
-int createConnection(char* SERVER_ADDR, int SERVER_PORT, int* port) {
+int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passwd) {
 
     //1º abrir a ligaçao com o IP e a PORT
     //2º fazer login (anonymous ou com os dados fornecidos)
@@ -49,8 +49,23 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, int* port) {
     //4º receber info e calcular a PORT de leitura
     //5º ler de PATH o ficheiro pretendido
 
-    int sockfd, STOP = 0, visited = 0;
-    struct sockaddr_in server_addr;
+    int sockfd, STOP = 0, visited = 0, sizeUser = strlen(user), sizePass = strlen(passwd), sockfd2, port = 0;
+
+    /* criaçao da string "user anonymous\r\n" "pass qualquer-password\r\n" a funcionar como desejado*/
+    char userLogin[sizeUser+7], passwdLogin[sizePass+7];
+    userLogin[0] = '\0';
+    passwdLogin[0] = '\0';
+
+    strcat(userLogin, "user ");
+    strcat(passwdLogin, "pass ");
+
+    strcat(userLogin, user);
+    strcat(passwdLogin, passwd);
+
+    strcat(userLogin, "\r\n");
+    strcat(passwdLogin, "\r\n");
+
+    struct sockaddr_in server_addr, server_addr2;
     char buf[500] = {0};
 
     size_t bytes;
@@ -91,19 +106,21 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, int* port) {
                 if(visited) break;
                 visited = 1;
                 printf("\n////////// Sending user... //////////\n");
-                write(sockfd, "user anonymous\n", 16);
+                write(sockfd, userLogin, strlen(userLogin));
                 break;
             case 331:
                 printf("\n////////// Sending password... //////////\n");
-                write(sockfd, "pass qualquer-password\n", 24);
+                write(sockfd, passwdLogin, strlen(passwdLogin));
                 break;
             case 230:
                 printf("\n////////// Entering passive mode... //////////\n");
-                write(sockfd, "passv\n", 6);
+                write(sockfd, "pasv\r\n", 6);
                 break;
             case 227:
-                printf("\n////////// Calculating port number...//////////\n");
-                *port = getPortNumber(buf);
+                printf("\n////////// Calculating port number... //////////\n");
+                port = getPortNumber(buf);
+                printf("\nPort Calculated: %d\n", port);
+                STOP = 1;
                 break;
             default:
                 printf("\n////////// Status code %d not recognized //////////\n", sc);
@@ -111,7 +128,41 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, int* port) {
                 break;
         }
     }
+
+    printf("\n////////// Creating new connection... //////////\n");
+
+    /* criar a outra socket */
+    bzero((char *) &server_addr2, sizeof(server_addr2));
+    server_addr2.sin_family = AF_INET;
+    server_addr2.sin_addr.s_addr = inet_addr(SERVER_ADDR);    /*32 bit Internet address network byte ordered*/
+    server_addr2.sin_port = htons(port);        /*server TCP port must be network byte ordered */
+
+    /*open a TCP socket*/
+    if ((sockfd2 = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("socket()");
+        return -1;
+    }
+    /*connect to the server*/
+    if (connect(sockfd2,
+                (struct sockaddr *) &server_addr2,
+                sizeof(server_addr2)) < 0) {
+        perror("connect()");
+        return -1;
+    }
     
+    
+    memset(buf, 0, 500);
+    bytes = read(sockfd, buf, 500); 
+    
+    
+    
+    
+    
+    
+    if (close(sockfd2)<0) {
+        perror("close()");
+        return -1;
+    }
 
     if (close(sockfd)<0) {
         perror("close()");

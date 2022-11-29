@@ -1,0 +1,33 @@
+1º fazer systemctl restart networking
+2º fazer (no switch) /system restart-configuration
+
+3) fazer ifconfig em todos os pcs para ver se os ip estao certos
+    3.1 o pc4 tem que ter eth0 e eth1 definidos, pc2 e pc3 so tem de ter definidos eth0
+    3.2 ifconfig eth0 172.16.20.254/24 -- tux24
+    3.3 ifconfig eth1 172.16.21.253/24 -- tux24
+    3.4 ifconfig eth0 172.16.20.1/24 -- tux23
+    3.5 ifconfig eth0 172.16.21.1/24 -- tux22
+
+4) fazer no gtkterm, dentro do switch (a entrada T4 tem de estar ligada ao switch)
+    4.1 /interface bridge add name=bridge20
+    4.2 /interface bridge add name=bridge21
+    4.3 /interface bridge port remove [find interface=etherX] -- X corresponde as portas do router que estao ligadas ao eth0/eth1 de cada tux (2,3,4,5 normalmente)
+    4.4 /interface bridge add bridge=bridge20 interface=ether3 -- para o tux23
+    4.5 /interface bridge add bridge=bridge20 interface=ether4 -- para o tux24 eth0
+    4.6 /interface bridge add bridge=bridge21 interface=ether5 -- para o tux24 eth1
+    4.7 /interface bridge add bridge=bridge21 interface=ether2 -- para o tux22
+
+5) criar as routes:
+    5.1 route add -net 172.16.20.0/24 gw 172.16.21.253 -- no tux22
+    5.2 route add -net 172.16.21.0/24 gw 172.16.20.254 -- no tux23
+
+6) fazer ping e verificar se esta tudo
+7) fazer no gtkterm, dentro do router (a entrada T4 tem de estar ligada ao Router MT):
+    7.1 /ip address add address=172.16.1.29/24 interface=ether1 --ether1 porque é a entrada para a rede do laboratorio que suporta NAT
+    7.2 /ip address add address=172.16.21.254/24 interface=ether2 --ether2 é a porta a que o cabo esta ligado no router
+
+8) EXP4 STEP2 | fazer default gateway das routes (apagar as routes de antes):
+    8.1 route add default gw 172.16.20.254 --se correr isto no terminal do tux23, tux24 é default de tux23
+    8.2 route add default gw 172.16.21.254 --se correr isto no terminal do tux22/tux24, Rc é default de tux22/tux24
+    8.3 route add -net 172.16.20.0/24 gw 172.16.21.253 -- no terminal de tux22
+    8.4 /ip route add dst-address=172.16.20.0/24 gateway=172.16.11.253
