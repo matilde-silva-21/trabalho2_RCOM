@@ -99,7 +99,7 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
 
     strcat(userLogin, "user ");
     strcat(passwdLogin, "pass ");
-    strcat(retrvPath, "retrv ");
+    strcat(retrvPath, "retr ");
 
     strcat(userLogin, user);
     strcat(passwdLogin, passwd);
@@ -161,7 +161,7 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
                 if ((sockfd2 = createSocket(SERVER_ADDR, port)) == -1) return -1;
 
                 printf("\n////////// Retrieving file... //////////\n");
-                write(sockfd, "retr pub/kodi/timestamp.txt\r\n", 29);
+                write(sockfd, retrvPath, strlen(retrvPath));
 
 
                 break;
