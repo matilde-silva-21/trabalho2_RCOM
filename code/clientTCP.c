@@ -64,17 +64,19 @@ int createSocket(char* SERVER_ADDR, int SERVER_PORT){
     server_addr.sin_port = htons(SERVER_PORT);        /*server TCP port must be network byte ordered */
 
     /*open a TCP socket*/
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((sockfd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)) < 0) {
         perror("socket()");
         return -1;
     }
     /*connect to the server*/
-    if (connect(sockfd,
+    /* if (connect(sockfd,
                 (struct sockaddr *) &server_addr,
                 sizeof(server_addr)) < 0) {
         perror("connect()");
         return -1;
-    }
+    } */
+
+    connect(sockfd,(struct sockaddr *) &server_addr, sizeof(server_addr));
 
     return sockfd;
 }
@@ -113,7 +115,7 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
 
     char buf[500] = {0}, buf2[500]={0};
 
-    size_t bytes;
+    size_t bytes, bytes2;
 
     int sockfd = createSocket(SERVER_ADDR, SERVER_PORT), sockfd2 = 0;
     if(sockfd == -1) return -1;
@@ -121,20 +123,23 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
     //TODO criar state machine
     while (!STOP)
     {  
+        
         memset(buf, 0, 500);
-        bytes = read(sockfd, buf, 500); 
-
+        bytes = read(sockfd, buf, 500);
+        
         if(download){
             memset(buf2, 0, 500);
-            bytes = read(sockfd2, buf2, 500);
-            if(bytes < 1) {printf("\ni got nothing -- buf2\n"); continue;}
-            printf("\nbuf2: %s\n", buf2);
-            for(int i=0; i<strlen(buf2); i++){
-                fputc(buf2[i], fileptr);
+            bytes2 = read(sockfd2, buf2, 500);
+            if(bytes2 != -1 && bytes2 != 0) {
+                printf("\nbuf2:");
+                for(int i=0; i<bytes2; i++){
+                    printf("%c", buf2[i]);
+                    fputc(buf2[i], fileptr);
+                }
             }
         }
 
-        if(bytes < 1) {printf("\ni got nothing -- buf\n"); continue;}
+        if(bytes == -1 || bytes == 0) {/* printf("\ni got nothing -- buf\n"); */ continue;}
         printf("\n%s\n", buf);
         int sc = getLastLineStatusCode(buf);
 
@@ -186,7 +191,7 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
         }
     }
 
-    
+    fclose(fileptr);
     
     if (close(sockfd2)<0) {
         perror("close()");
