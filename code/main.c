@@ -20,9 +20,9 @@ int main(int argc, char *argv[]){
         exit(-1);
     }
 
-    char host[strlen(argv[1])], path[strlen(argv[1])], IPaddress[15]="", user[strlen(argv[1])], password[strlen(argv[1])];
+    char host[strlen(argv[1])], path[strlen(argv[1])], IPaddress[15]="", user[strlen(argv[1])], password[strlen(argv[1])], dummy[strlen(argv[1])];
 
-    if(getDetails(argc,argv,path, host, user, password)!=0){
+    if(getDetails(argc,argv,path, host, user, password, dummy)!=0){
         printf("Error occurred in fuction getDetails (main.c -- line 26)\n");
         exit(-1);
     }

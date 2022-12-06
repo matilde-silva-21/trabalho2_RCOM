@@ -179,6 +179,19 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
                 break;
 
             case 226: 
+                while(1){
+                    memset(buf2, 0, 500);
+                    bytes2 = read(sockfd2, buf2, 500);
+                    if(bytes2 != -1 && bytes2 != 0) {
+                        printf("\nbuf2:");
+                        for(int i=0; i<bytes2; i++){
+                            printf("%c", buf2[i]);
+                            fputc(buf2[i], fileptr);
+                        }
+                        printf("\n");
+                    }
+                    else{break;}
+                }
                 printf("\n////////// Ending File Download... //////////\n");
                 download = 0;
                 STOP = 1;

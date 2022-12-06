@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int getDetails(int argc, char *argv[], char* path, char* host, char* user, char* passwd) {
+int getDetails(int argc, char *argv[], char* path, char* host, char* user, char* passwd, char* dummy) {
 
     memset(passwd, 0, strlen(passwd));
     memset(user, 0, strlen(passwd));
