@@ -195,6 +195,8 @@ int createConnection(char* SERVER_ADDR, int SERVER_PORT, char* user, char* passw
                 printf("\n////////// Ending File Download... //////////\n");
                 download = 0;
                 STOP = 1;
+                printf("\n////////// Closing connection... Bye Bye //////////\n");
+                write(sockfd, "quit\r\n", 6);
                 break;
 
             default:
